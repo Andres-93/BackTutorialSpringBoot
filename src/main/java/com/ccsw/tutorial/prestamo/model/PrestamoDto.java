@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.ccsw.tutorial.client.model.Client;
 import com.ccsw.tutorial.game.model.Game;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class PrestamoDto {
 
@@ -13,8 +14,10 @@ public class PrestamoDto {
 
     private Client client;
 
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
     private Date startdate;
 
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
     private Date enddate;
 
     public Long getId() {

@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.ccsw.tutorial.client.model.Client;
 import com.ccsw.tutorial.game.model.Game;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,9 +33,11 @@ public class Prestamo {
     private Client client;
 
     @Column(name = "startdate", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
     private Date startdate;
 
     @Column(name = "enddate", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
     private Date enddate;
 
     public Long getId() {

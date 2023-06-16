@@ -68,22 +68,29 @@ public class PrestamoServiceImpl implements IPrestamoService {
             for (Prestamo prestamo : listaPrestamosGame) {
 
                 Date fechaInicio = prestamo.getStartdate();
-                Date fechaFinal = prestamo.getEnddate();
-                Date fechaDTO = dto.getStartdate();
-                Date fechaFinDTO = dto.getEnddate();
+                Date fechaFin = prestamo.getEnddate();
 
-                System.out.println(fechaInicio);
-                System.out.println(fechaFinal);
+                Date fechaDTO = null;
+                Date fechaFinDTO = null;
+                try {
+                    fechaDTO = new SimpleDateFormat("dd/MM/yyyy")
+                            .parse(new SimpleDateFormat("dd/MM/yyyy").format(dto.getStartdate()));
+                    fechaFinDTO = new SimpleDateFormat("dd/MM/yyyy")
+                            .parse(new SimpleDateFormat("dd/MM/yyyy").format(dto.getEnddate()));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println(prestamo.getStartdate());
+                System.out.println(prestamo.getEnddate());
                 System.out.println(fechaDTO);
                 System.out.println(fechaFinDTO);
 
-                /*
-                 * if ((dto.getStartdate().compareTo(fechaFin) <= 0 ||
-                 * dto.getStartdate().compareTo(fechaFin) == 0) &&
-                 * (fechaInicio.compareTo(dto.getEnddate()) <= 0 ||
-                 * fechaInicio.compareTo(dto.getEnddate()) == 0)) { mensajeError +=
-                 * "Error el juego seleccionado no esta disponible los dias elegidos."; }
-                 */
+                if ((fechaDTO.compareTo(fechaFin) <= 0 || fechaDTO.compareTo(fechaFin) == 0)
+                        && (fechaInicio.compareTo(fechaFinDTO) <= 0 || fechaInicio.compareTo(fechaFinDTO) == 0)) {
+                    mensajeError += "Error el juego seleccionado no esta disponible los dias elegidos.";
+                }
+
             }
         }
 
@@ -132,9 +139,6 @@ public class PrestamoServiceImpl implements IPrestamoService {
 
                 try {
                     Date fechaAComparar = new SimpleDateFormat("dd/MM/yyyy").parse(fecha);
-                    System.out.println(fechaAComparar);
-                    System.out.println(listaEncontrada.get(i).getStartdate());
-                    System.out.println(listaEncontrada.get(i).getEnddate());
 
                     if ((fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) > 0
                             && fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) < 0)
