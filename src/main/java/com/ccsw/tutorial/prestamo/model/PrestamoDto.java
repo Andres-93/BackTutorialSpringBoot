@@ -1,6 +1,6 @@
 package com.ccsw.tutorial.prestamo.model;
 
-import java.sql.Date;
+import java.util.Date;
 
 import com.ccsw.tutorial.client.model.Client;
 import com.ccsw.tutorial.game.model.Game;

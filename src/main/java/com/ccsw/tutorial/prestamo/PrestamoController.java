@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ccsw.tutorial.common.ownException.ErrorNuevoPrestamoException;
 import com.ccsw.tutorial.prestamo.model.Prestamo;
 import com.ccsw.tutorial.prestamo.model.PrestamoDto;
 import com.ccsw.tutorial.prestamo.model.PrestamoSearchDto;
@@ -58,7 +59,8 @@ public class PrestamoController {
 
     @Operation(summary = "Save or Update", description = "guarda un nuevo prestamo o actualiza uno ya existente")
     @RequestMapping(path = { "", "/{id}" }, method = RequestMethod.PUT)
-    public void save(@PathVariable(name = "id", required = false) Long id, @RequestBody PrestamoDto dto) {
+    public void save(@PathVariable(name = "id", required = false) Long id, @RequestBody PrestamoDto dto)
+            throws ErrorNuevoPrestamoException {
 
         this.prestamoService.save(id, dto);
     }

@@ -2,8 +2,10 @@ package com.ccsw.tutorial.prestamo;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.ccsw.tutorial.common.criteria.SearchCriteria;
+import com.ccsw.tutorial.common.ownException.ErrorNuevoPrestamoException;
 import com.ccsw.tutorial.game.GameService;
 import com.ccsw.tutorial.game.model.Game;
 import com.ccsw.tutorial.prestamo.model.Prestamo;
@@ -47,8 +50,51 @@ public class PrestamoServiceImpl implements IPrestamoService {
     }
 
     @Override
-    public void save(Long id, PrestamoDto dto) {
-        // TODO Auto-generated method stub
+    public void save(Long id, PrestamoDto dto) throws ErrorNuevoPrestamoException {
+
+        // Evaluamos dias de prestamo
+        String mensajeError = "";
+        Long diasPrestamo = TimeUnit.DAYS.convert(dto.getEnddate().getTime() - dto.getStartdate().getTime(),
+                TimeUnit.MILLISECONDS);
+        if (diasPrestamo > 14) {
+            mensajeError += "Error el maximo de dias del prestamo debe ser 14.";
+
+        }
+
+        // Listado de los prestamos ya existentes de un juego.
+        List<Prestamo> listaPrestamosGame = this.prestamoRepository.findByGameId(dto.getGame().getId());
+
+        if (!listaPrestamosGame.isEmpty()) {
+            for (Prestamo prestamo : listaPrestamosGame) {
+
+                Date fechaInicio = prestamo.getStartdate();
+                Date fechaFinal = prestamo.getEnddate();
+                Date fechaDTO = dto.getStartdate();
+                Date fechaFinDTO = dto.getEnddate();
+
+                System.out.println(fechaInicio);
+                System.out.println(fechaFinal);
+                System.out.println(fechaDTO);
+                System.out.println(fechaFinDTO);
+
+                /*
+                 * if ((dto.getStartdate().compareTo(fechaFin) <= 0 ||
+                 * dto.getStartdate().compareTo(fechaFin) == 0) &&
+                 * (fechaInicio.compareTo(dto.getEnddate()) <= 0 ||
+                 * fechaInicio.compareTo(dto.getEnddate()) == 0)) { mensajeError +=
+                 * "Error el juego seleccionado no esta disponible los dias elegidos."; }
+                 */
+            }
+        }
+
+        throw new ErrorNuevoPrestamoException(mensajeError);
+
+        /*
+         *
+         * 
+         * cliente no puede tener prestados más de 2 juegos en un mismo día.
+         * 
+         */
 
     }
 
@@ -80,14 +126,21 @@ public class PrestamoServiceImpl implements IPrestamoService {
 
         if (!listaEncontrada.isEmpty() && fecha != null) {
 
+            List<Prestamo> listaFiltroFechas = new ArrayList<Prestamo>();
+
             for (int i = 0; i < listaEncontrada.size(); i++) {
 
                 try {
                     Date fechaAComparar = new SimpleDateFormat("dd/MM/yyyy").parse(fecha);
-                    java.util.Date fechaInicio = new java.util.Date(listaEncontrada.get(i).getStartdate().getTime());
-                    java.util.Date fechaFin = new java.util.Date(listaEncontrada.get(i).getEnddate().getTime());
-                    if (fechaAComparar.compareTo(fechaInicio) < 0 || fechaAComparar.compareTo(fechaFin) > 0) {
-                        listaEncontrada.remove(i);
+                    System.out.println(fechaAComparar);
+                    System.out.println(listaEncontrada.get(i).getStartdate());
+                    System.out.println(listaEncontrada.get(i).getEnddate());
+
+                    if ((fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) > 0
+                            && fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) < 0)
+                            || fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) == 0
+                            || fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) == 0) {
+                        listaFiltroFechas.add(listaEncontrada.get(i));
                     }
 
                 } catch (ParseException e) {
@@ -95,6 +148,8 @@ public class PrestamoServiceImpl implements IPrestamoService {
                     e.printStackTrace();
                 }
             }
+
+            listaEncontrada = listaFiltroFechas;
 
         }
 
