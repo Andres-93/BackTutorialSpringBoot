@@ -14,10 +14,10 @@ public class PrestamoDto {
 
     private Client client;
 
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date startdate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date enddate;
 
     public Long getId() {

@@ -7,11 +7,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import com.ccsw.tutorial.client.IClientService;
 import com.ccsw.tutorial.common.criteria.SearchCriteria;
 import com.ccsw.tutorial.common.ownException.ErrorNuevoPrestamoException;
 import com.ccsw.tutorial.game.GameService;
@@ -32,6 +34,9 @@ public class PrestamoServiceImpl implements IPrestamoService {
     @Autowired
     GameService gameService;
 
+    @Autowired
+    IClientService clientService;
+
     @Override
     public List<Prestamo> findAll() {
 
@@ -40,8 +45,7 @@ public class PrestamoServiceImpl implements IPrestamoService {
 
     @Override
     public Prestamo get(Long id) {
-        // TODO Auto-generated method stub
-        return null;
+        return this.prestamoRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -61,53 +65,72 @@ public class PrestamoServiceImpl implements IPrestamoService {
 
         }
 
+        boolean continuarBusqueda = true;
+
         // Listado de los prestamos ya existentes de un juego.
         List<Prestamo> listaPrestamosGame = this.prestamoRepository.findByGameId(dto.getGame().getId());
 
         if (!listaPrestamosGame.isEmpty()) {
-            for (Prestamo prestamo : listaPrestamosGame) {
+            for (int i = 0; i < listaPrestamosGame.size() && continuarBusqueda; i++) {
 
-                Date fechaInicio = prestamo.getStartdate();
-                Date fechaFin = prestamo.getEnddate();
-
-                Date fechaDTO = null;
-                Date fechaFinDTO = null;
-                try {
-                    fechaDTO = new SimpleDateFormat("dd/MM/yyyy")
-                            .parse(new SimpleDateFormat("dd/MM/yyyy").format(dto.getStartdate()));
-                    fechaFinDTO = new SimpleDateFormat("dd/MM/yyyy")
-                            .parse(new SimpleDateFormat("dd/MM/yyyy").format(dto.getEnddate()));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println(prestamo.getStartdate());
-                System.out.println(prestamo.getEnddate());
-                System.out.println(fechaDTO);
-                System.out.println(fechaFinDTO);
+                Date fechaInicio = listaPrestamosGame.get(i).getStartdate();
+                Date fechaFin = listaPrestamosGame.get(i).getEnddate();
+                Date fechaDTO = dto.getStartdate();
+                Date fechaFinDTO = dto.getEnddate();
 
                 if ((fechaDTO.compareTo(fechaFin) <= 0 || fechaDTO.compareTo(fechaFin) == 0)
                         && (fechaInicio.compareTo(fechaFinDTO) <= 0 || fechaInicio.compareTo(fechaFinDTO) == 0)) {
                     mensajeError += "Error el juego seleccionado no esta disponible los dias elegidos.";
+                    continuarBusqueda = false;
                 }
 
             }
         }
 
-        throw new ErrorNuevoPrestamoException(mensajeError);
+        // lista de prestamos de un cliente
+        List<Prestamo> listaPrestamosCliente = this.prestamoRepository.findByClientId(dto.getClient().getId());
+        {
+            continuarBusqueda = true;
+            if (!listaPrestamosCliente.isEmpty()) {
+                for (int i = 0; i < listaPrestamosCliente.size() && continuarBusqueda; i++) {
+                    Date fechaInicio = listaPrestamosCliente.get(i).getStartdate();
+                    Date fechaFin = listaPrestamosCliente.get(i).getEnddate();
 
-        /*
-         *
-         * 
-         * cliente no puede tener prestados más de 2 juegos en un mismo día.
-         * 
-         */
+                    Date fechaDTO = dto.getStartdate();
+                    Date fechaFinDTO = dto.getEnddate();
+
+                    if ((fechaDTO.compareTo(fechaFin) <= 0 || fechaDTO.compareTo(fechaFin) == 0)
+                            && (fechaInicio.compareTo(fechaFinDTO) <= 0 || fechaInicio.compareTo(fechaFinDTO) == 0)) {
+                        mensajeError += "Error ya tienes un juego prestado durante esos dias, por favor corrija las fechas.";
+                        continuarBusqueda = false;
+                    }
+
+                }
+            }
+        }
+
+        if (mensajeError != "") {
+            throw new ErrorNuevoPrestamoException(mensajeError);
+        }
+
+        Prestamo prestamo = new Prestamo();
+
+        BeanUtils.copyProperties(dto, prestamo, "id", "game", "client");
+
+        prestamo.setClient(clientService.get(dto.getClient().getId()));
+        prestamo.setGame(gameService.get(dto.getGame().getId()));
+
+        this.prestamoRepository.save(prestamo);
 
     }
 
     @Override
     public void delete(Long id) throws Exception {
-        // TODO Auto-generated method stub
+        if (this.get(id) == null) {
+            throw new Exception("Not exists");
+        }
+
+        this.prestamoRepository.deleteById(id);
 
     }
 

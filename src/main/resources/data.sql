@@ -19,7 +19,3 @@ INSERT INTO game(title, age, category_id, author_id) VALUES ('Azul', '8', 3, 5);
 INSERT INTO client(name) VALUES ('Juan');
 INSERT INTO client(name) VALUES ('Pablo');
 INSERT INTO client(name) VALUES ('Roberto');
-
-INSERT INTO prestamo(game_id, client_id, startDate, endDate) VALUES ('1', '1',  '2023-06-05', '2023-06-10');
-INSERT INTO prestamo(game_id, client_id, startDate, endDate) VALUES ('3', '2',  '2023-06-12', '2023-06-15');
-INSERT INTO prestamo(game_id, client_id, startDate, endDate) VALUES ('5', '3',  '2023-06-01', '2023-06-22');

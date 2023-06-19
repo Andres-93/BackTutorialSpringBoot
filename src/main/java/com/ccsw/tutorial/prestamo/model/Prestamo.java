@@ -33,11 +33,11 @@ public class Prestamo {
     private Client client;
 
     @Column(name = "startdate", nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date startdate;
 
     @Column(name = "enddate", nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date enddate;
 
     public Long getId() {
