@@ -184,19 +184,3 @@ public class PrestamoServiceImpl implements IPrestamoService {
     }
 
 }
-
-/*
- * if (title == null && idClient == null) { return (List<Prestamo>)
- * this.prestamoRepository.findAll(); } else if (title == null) { return
- * this.prestamoRepository.findByClientId(idClient); }
- * 
- * Long idGame = null; Game game = this.gameService.find(title);
- * 
- * if (game != null) { idGame = game.getId(); } if (idClient == null) {
- * 
- * return this.prestamoRepository.findByGameId(idGame);
- * 
- * }
- * 
- * return this.prestamoRepository.findByGameIdAndClientId(idGame, idClient);
- */
