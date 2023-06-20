@@ -55,9 +55,9 @@ public class PrestamoServiceImpl implements IPrestamoService {
         PrestamoSpecification gameSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", dto.getIdGame()));
 
         PrestamoSpecification fechaMayorIgual = new PrestamoSpecification(
-                new SearchCriteria("startdate", ">", dto.getFecha()));
+                new SearchCriteria("startdate", "<", dto.getFecha()));
         PrestamoSpecification fechaMenorIgual = new PrestamoSpecification(
-                new SearchCriteria("enddate", "<", dto.getFecha()));
+                new SearchCriteria("enddate", ">", dto.getFecha()));
 
         Specification<Prestamo> spec = Specification.where(fechaMenorIgual).and(fechaMayorIgual).and(clientSpec)
                 .and(gameSpec);
