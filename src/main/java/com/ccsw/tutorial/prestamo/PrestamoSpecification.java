@@ -1,5 +1,7 @@
 package com.ccsw.tutorial.prestamo;
 
+import java.util.Date;
+
 import org.springframework.data.jpa.domain.Specification;
 
 import com.ccsw.tutorial.common.criteria.SearchCriteria;
@@ -23,14 +25,30 @@ public class PrestamoSpecification implements Specification<Prestamo> {
     }
 
     public Predicate toPredicate(Root<Prestamo> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
-        if (criteria.getOperation().equalsIgnoreCase(":") && criteria.getValue() != null) {
-            Path<String> path = getPath(root);
-            if (path.getJavaType() == String.class) {
-                return builder.like(path, "%" + criteria.getValue() + "%");
-            } else {
-                return builder.equal(path, criteria.getValue());
+
+        Path<String> path = getPath(root);
+        if (criteria.getValue() != null) {
+            if (criteria.getOperation().equalsIgnoreCase(":")) {
+
+                if (path.getJavaType() == String.class) {
+                    return builder.like(path, "%" + criteria.getValue() + "%");
+                } else {
+                    return builder.equal(path, criteria.getValue());
+                }
+            } else if (criteria.getOperation().equalsIgnoreCase(">")) {
+
+                return builder.greaterThanOrEqualTo(root.get(criteria.getKey()).as(Date.class),
+                        (Date) criteria.getValue());
+
+            } else if (criteria.getOperation().equalsIgnoreCase("<")) {
+
+                return builder.lessThanOrEqualTo(root.get(criteria.getKey()).as(Date.class),
+                        (Date) criteria.getValue());
+
             }
+
         }
+
         return null;
     }
 

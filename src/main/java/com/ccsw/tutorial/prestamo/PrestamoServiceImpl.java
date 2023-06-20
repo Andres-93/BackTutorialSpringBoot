@@ -37,12 +37,10 @@ public class PrestamoServiceImpl implements IPrestamoService {
     @Autowired
     IClientService clientService;
 
-    @Override
-    public List<Prestamo> findAll() {
-
-        return (List<Prestamo>) this.prestamoRepository.findAll();
-    }
-
+    /*
+     * @Override public List<Prestamo> findAll() { return (List<Prestamo>)
+     * this.prestamoRepository.findAll(); }
+     */
     @Override
     public Prestamo get(Long id) {
         return this.prestamoRepository.findById(id).orElse(null);
@@ -50,7 +48,70 @@ public class PrestamoServiceImpl implements IPrestamoService {
 
     @Override
     public Page<Prestamo> findPage(PrestamoSearchDto dto) {
-        return this.prestamoRepository.findAll(dto.getPageable().getPageable());
+
+        PrestamoSpecification clientSpec = new PrestamoSpecification(
+                new SearchCriteria("client.id", ":", dto.getIdClient()));
+
+        PrestamoSpecification gameSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", dto.getIdGame()));
+
+        PrestamoSpecification fechaMayorIgual = new PrestamoSpecification(
+                new SearchCriteria("startdate", ">", dto.getFecha()));
+        PrestamoSpecification fechaMenorIgual = new PrestamoSpecification(
+                new SearchCriteria("enddate", "<", dto.getFecha()));
+
+        Specification<Prestamo> spec = Specification.where(fechaMenorIgual).and(fechaMayorIgual).and(clientSpec)
+                .and(gameSpec);
+
+        return this.prestamoRepository.findAll(spec, dto.getPageable().getPageable());
+    }
+
+    @Override
+    public List<Prestamo> find(String title, Long idClient, String fecha) {
+
+        Game game = null;
+        PrestamoSpecification titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", null));
+        if (title != null && title != "") {
+            game = this.gameService.find(title);
+            if (game != null) {
+                titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", game.getId()));
+            } else {
+                titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", 0));
+            }
+        }
+
+        PrestamoSpecification clientSpec = new PrestamoSpecification(new SearchCriteria("client.id", ":", idClient));
+
+        Specification<Prestamo> spec = Specification.where(titleSpec).and(clientSpec);
+
+        List<Prestamo> listaEncontrada = this.prestamoRepository.findAll(spec);
+
+        if (!listaEncontrada.isEmpty() && fecha != null) {
+
+            List<Prestamo> listaFiltroFechas = new ArrayList<Prestamo>();
+
+            for (int i = 0; i < listaEncontrada.size(); i++) {
+
+                try {
+                    Date fechaAComparar = new SimpleDateFormat("dd/MM/yyyy").parse(fecha);
+
+                    if ((fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) > 0
+                            && fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) < 0)
+                            || fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) == 0
+                            || fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) == 0) {
+                        listaFiltroFechas.add(listaEncontrada.get(i));
+                    }
+
+                } catch (ParseException e) {
+
+                    e.printStackTrace();
+                }
+            }
+
+            listaEncontrada = listaFiltroFechas;
+
+        }
+
+        return listaEncontrada;
     }
 
     @Override
@@ -132,55 +193,6 @@ public class PrestamoServiceImpl implements IPrestamoService {
 
         this.prestamoRepository.deleteById(id);
 
-    }
-
-    @Override
-    public List<Prestamo> find(String title, Long idClient, String fecha) {
-
-        Game game = null;
-        PrestamoSpecification titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", null));
-        if (title != null && title != "") {
-            game = this.gameService.find(title);
-            if (game != null) {
-                titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", game.getId()));
-            } else {
-                titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", 0));
-            }
-        }
-
-        PrestamoSpecification clientSpec = new PrestamoSpecification(new SearchCriteria("client.id", ":", idClient));
-
-        Specification<Prestamo> spec = Specification.where(titleSpec).and(clientSpec);
-
-        List<Prestamo> listaEncontrada = this.prestamoRepository.findAll(spec);
-
-        if (!listaEncontrada.isEmpty() && fecha != null) {
-
-            List<Prestamo> listaFiltroFechas = new ArrayList<Prestamo>();
-
-            for (int i = 0; i < listaEncontrada.size(); i++) {
-
-                try {
-                    Date fechaAComparar = new SimpleDateFormat("dd/MM/yyyy").parse(fecha);
-
-                    if ((fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) > 0
-                            && fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) < 0)
-                            || fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) == 0
-                            || fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) == 0) {
-                        listaFiltroFechas.add(listaEncontrada.get(i));
-                    }
-
-                } catch (ParseException e) {
-
-                    e.printStackTrace();
-                }
-            }
-
-            listaEncontrada = listaFiltroFechas;
-
-        }
-
-        return listaEncontrada;
     }
 
 }

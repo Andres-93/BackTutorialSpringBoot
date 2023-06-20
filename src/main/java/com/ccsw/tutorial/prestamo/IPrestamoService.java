@@ -10,7 +10,7 @@ import com.ccsw.tutorial.prestamo.model.PrestamoSearchDto;
 
 public interface IPrestamoService {
 
-    List<Prestamo> findAll();
+    // List<Prestamo> findAll();
 
     Prestamo get(Long id);
 
