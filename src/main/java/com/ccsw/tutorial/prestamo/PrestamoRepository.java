@@ -26,6 +26,10 @@ public interface PrestamoRepository extends CrudRepository<Prestamo, Long>, JpaS
     @EntityGraph(attributePaths = { "game", "client" })
     Page<Prestamo> findAll(Specification<Prestamo> spec, Pageable pageable);
 
+    @Override
+    @EntityGraph(attributePaths = { "game", "client" })
+    List<Prestamo> findAll(Specification<Prestamo> spec);
+
     @Query(value = "select * from prestamo p where game_id = ?1 and client_id = ?2", nativeQuery = true)
     List<Prestamo> findByGameIdAndClientId(Long gameId, Long clientId);
 

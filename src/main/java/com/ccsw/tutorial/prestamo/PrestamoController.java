@@ -33,22 +33,6 @@ public class PrestamoController {
     @Autowired
     IPrestamoService prestamoService;
 
-    /*
-     * @Operation(summary = "Find", description = "Retorna todos los prestamos")
-     * 
-     * @RequestMapping(path = "", method = RequestMethod.GET) public
-     * List<PrestamoDto> findAll(@RequestParam(value = "title", required = false)
-     * String title,
-     * 
-     * @RequestParam(value = "idClient", required = false) Long idClient,
-     * 
-     * @RequestParam(value = "fecha", required = false) String fecha) {
-     * 
-     * List<Prestamo> prestamos = this.prestamoService.find(title, idClient, fecha);
-     * 
-     * return prestamos.stream().map(e -> mapper.map(e,
-     * PrestamoDto.class)).collect(Collectors.toList()); }
-     */
     @Operation(summary = "Find Page", description = "Retorna una pagina de prestamos")
     @RequestMapping(path = "", method = RequestMethod.POST)
     public Page<PrestamoDto> findPage(@RequestBody PrestamoSearchDto dto) {

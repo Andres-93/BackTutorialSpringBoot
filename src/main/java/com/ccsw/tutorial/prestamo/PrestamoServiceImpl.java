@@ -1,10 +1,5 @@
 package com.ccsw.tutorial.prestamo;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.BeanUtils;
@@ -17,7 +12,6 @@ import com.ccsw.tutorial.client.IClientService;
 import com.ccsw.tutorial.common.criteria.SearchCriteria;
 import com.ccsw.tutorial.common.ownException.ErrorNuevoPrestamoException;
 import com.ccsw.tutorial.game.GameService;
-import com.ccsw.tutorial.game.model.Game;
 import com.ccsw.tutorial.prestamo.model.Prestamo;
 import com.ccsw.tutorial.prestamo.model.PrestamoDto;
 import com.ccsw.tutorial.prestamo.model.PrestamoSearchDto;
@@ -66,55 +60,6 @@ public class PrestamoServiceImpl implements IPrestamoService {
     }
 
     @Override
-    public List<Prestamo> find(String title, Long idClient, String fecha) {
-
-        Game game = null;
-        PrestamoSpecification titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", null));
-        if (title != null && title != "") {
-            game = this.gameService.find(title);
-            if (game != null) {
-                titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", game.getId()));
-            } else {
-                titleSpec = new PrestamoSpecification(new SearchCriteria("game.id", ":", 0));
-            }
-        }
-
-        PrestamoSpecification clientSpec = new PrestamoSpecification(new SearchCriteria("client.id", ":", idClient));
-
-        Specification<Prestamo> spec = Specification.where(titleSpec).and(clientSpec);
-
-        List<Prestamo> listaEncontrada = this.prestamoRepository.findAll(spec);
-
-        if (!listaEncontrada.isEmpty() && fecha != null) {
-
-            List<Prestamo> listaFiltroFechas = new ArrayList<Prestamo>();
-
-            for (int i = 0; i < listaEncontrada.size(); i++) {
-
-                try {
-                    Date fechaAComparar = new SimpleDateFormat("dd/MM/yyyy").parse(fecha);
-
-                    if ((fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) > 0
-                            && fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) < 0)
-                            || fechaAComparar.compareTo(listaEncontrada.get(i).getStartdate()) == 0
-                            || fechaAComparar.compareTo(listaEncontrada.get(i).getEnddate()) == 0) {
-                        listaFiltroFechas.add(listaEncontrada.get(i));
-                    }
-
-                } catch (ParseException e) {
-
-                    e.printStackTrace();
-                }
-            }
-
-            listaEncontrada = listaFiltroFechas;
-
-        }
-
-        return listaEncontrada;
-    }
-
-    @Override
     public void save(Long id, PrestamoDto dto) throws ErrorNuevoPrestamoException {
 
         // Evaluamos dias de prestamo
@@ -126,48 +71,30 @@ public class PrestamoServiceImpl implements IPrestamoService {
 
         }
 
-        boolean continuarBusqueda = true;
+        // Lista de prestamos para un juego
+        PrestamoSpecification gameSpec = new PrestamoSpecification(
+                new SearchCriteria("game.id", ":", dto.getGame().getId()));
 
-        // Listado de los prestamos ya existentes de un juego.
-        List<Prestamo> listaPrestamosGame = this.prestamoRepository.findByGameId(dto.getGame().getId());
+        PrestamoSpecification fechaMayorIgual = new PrestamoSpecification(
+                new SearchCriteria("startdate", "<", dto.getEnddate()));
+        PrestamoSpecification fechaMenorIgual = new PrestamoSpecification(
+                new SearchCriteria("enddate", ">", dto.getStartdate()));
 
-        if (!listaPrestamosGame.isEmpty()) {
-            for (int i = 0; i < listaPrestamosGame.size() && continuarBusqueda; i++) {
+        Specification<Prestamo> spec = Specification.where(gameSpec).and(fechaMayorIgual).and(fechaMenorIgual);
 
-                Date fechaInicio = listaPrestamosGame.get(i).getStartdate();
-                Date fechaFin = listaPrestamosGame.get(i).getEnddate();
-                Date fechaDTO = dto.getStartdate();
-                Date fechaFinDTO = dto.getEnddate();
-
-                if ((fechaDTO.compareTo(fechaFin) <= 0 || fechaDTO.compareTo(fechaFin) == 0)
-                        && (fechaInicio.compareTo(fechaFinDTO) <= 0 || fechaInicio.compareTo(fechaFinDTO) == 0)) {
-                    mensajeError += "Error el juego seleccionado no esta disponible los dias elegidos.";
-                    continuarBusqueda = false;
-                }
-
-            }
+        if (!this.prestamoRepository.findAll(spec).isEmpty()) {
+            mensajeError += "Error el juego seleccionado no esta disponible los dias elegidos.";
         }
 
         // lista de prestamos de un cliente
-        List<Prestamo> listaPrestamosCliente = this.prestamoRepository.findByClientId(dto.getClient().getId());
-        {
-            continuarBusqueda = true;
-            if (!listaPrestamosCliente.isEmpty()) {
-                for (int i = 0; i < listaPrestamosCliente.size() && continuarBusqueda; i++) {
-                    Date fechaInicio = listaPrestamosCliente.get(i).getStartdate();
-                    Date fechaFin = listaPrestamosCliente.get(i).getEnddate();
 
-                    Date fechaDTO = dto.getStartdate();
-                    Date fechaFinDTO = dto.getEnddate();
+        PrestamoSpecification clientSpec = new PrestamoSpecification(
+                new SearchCriteria("client.id", ":", dto.getClient().getId()));
 
-                    if ((fechaDTO.compareTo(fechaFin) <= 0 || fechaDTO.compareTo(fechaFin) == 0)
-                            && (fechaInicio.compareTo(fechaFinDTO) <= 0 || fechaInicio.compareTo(fechaFinDTO) == 0)) {
-                        mensajeError += "Error ya tienes un juego prestado durante esos dias, por favor corrija las fechas.";
-                        continuarBusqueda = false;
-                    }
+        spec = Specification.where(clientSpec).and(fechaMayorIgual).and(fechaMenorIgual);
 
-                }
-            }
+        if (!this.prestamoRepository.findAll(spec).isEmpty()) {
+            mensajeError += "Error ya tienes un juego prestado durante esos dias, por favor corrija las fechas.";
         }
 
         if (mensajeError != "") {

@@ -1,7 +1,5 @@
 package com.ccsw.tutorial.prestamo;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 
 import com.ccsw.tutorial.prestamo.model.Prestamo;
@@ -13,8 +11,6 @@ public interface IPrestamoService {
     // List<Prestamo> findAll();
 
     Prestamo get(Long id);
-
-    List<Prestamo> find(String title, Long idClient, String fecha);
 
     Page<Prestamo> findPage(PrestamoSearchDto dto);
 
