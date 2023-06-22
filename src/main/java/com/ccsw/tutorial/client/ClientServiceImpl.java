@@ -29,19 +29,22 @@ public class ClientServiceImpl implements IClientService {
     @Override
     public void save(Long id, ClientDto dto) throws Exception {
 
-        Client clienteBuscado = this.clientRepository.findByName(dto.getName());
         Client cliente;
+        Client clienteBuscado = this.clientRepository.findByName(dto.getName());
 
         if (id == null) {
             cliente = new Client();
+            if (clienteBuscado != null) {
+                throw new Exception("Ese cliente ya existe");
+            }
 
         } else {
             cliente = this.get(id);
+            if (clienteBuscado != null && clienteBuscado.getId() != id) {
+                throw new Exception("Ese cliente ya existe");
+            }
         }
 
-        if (clienteBuscado != null) {
-            throw new Exception("Ese cliente ya existe");
-        }
         cliente.setName(dto.getName());
         this.clientRepository.save(cliente);
 
